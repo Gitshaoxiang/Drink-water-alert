@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Drink-Water</title>
+        <link rel="stylesheet" href="./assets/css/normalize.css">
+        <link rel="stylesheet" href="./assets/css/main.css">
+    </head>
+<body>
+    <nav class="Header">
+        <div style="display: flex;">
+        </div>
+        <div class="systemBtn">
+            <span title="最小化" class="mini noDrag"  onclick="setWin('min')"><svg t="1590665853528" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2048" width="15" height="15"><path d="M72 462h880v100H72z" fill="#ffffff" p-id="2049"></path></svg></span>
+            <span title="最大化" class="max noDrag" onclick="setWin('max')"><svg t="1590665901917" class="icon" viewBox="0 0 1365 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2812" width="15" height="15"><path d="M1140.982158 0C1171.511117 0 1196.259731 24.748613 1196.259731 55.277574L1196.259731 481.802069C1196.259731 512.331031 1171.511117 537.079644 1140.982158 537.079644 1110.453196 537.079644 1085.704583 512.331031 1085.704583 481.802069L1085.704583 55.277574 1140.982158 110.555148 707.290659 110.555148C676.761697 110.555148 652.013084 85.806535 652.013084 55.277574 652.013084 24.748613 676.761697 0 707.290659 0L1140.982158 0ZM223.896216 1024.028434C193.367257 1024.028434 168.618642 999.279821 168.618642 968.75086L168.618642 542.226364C168.618642 511.697403 193.367257 486.94879 223.896216 486.94879 254.425178 486.94879 279.17379 511.697403 279.17379 542.226364L279.17379 968.75086 223.896216 913.473286 657.587715 913.473286C688.116677 913.473286 712.865289 938.221898 712.865289 968.75086 712.865289 999.279821 688.116677 1024.028434 657.587715 1024.028434L223.896216 1024.028434Z" p-id="2813" fill="#ffffff"></path></svg></span>
+            <span title="关闭" class="close noDrag" onclick="setWin('close')"><svg t="1590665937606" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3711" width="15" height="15"><path d="M583.168 523.776L958.464 148.48c18.944-18.944 18.944-50.176 0-69.12l-2.048-2.048c-18.944-18.944-50.176-18.944-69.12 0L512 453.12 136.704 77.312c-18.944-18.944-50.176-18.944-69.12 0l-2.048 2.048c-19.456 18.944-19.456 50.176 0 69.12l375.296 375.296L65.536 899.072c-18.944 18.944-18.944 50.176 0 69.12l2.048 2.048c18.944 18.944 50.176 18.944 69.12 0L512 594.944 887.296 970.24c18.944 18.944 50.176 18.944 69.12 0l2.048-2.048c18.944-18.944 18.944-50.176 0-69.12L583.168 523.776z" p-id="3712" fill="#ffffff"></path></svg></span>
+        </div>
+    </nav>
+
+
+    
+    <div id="clock">
+        <h2>当前喝水间隔时间为：<span>60</span>分钟</h2>
+        <input id="slider" type="range" max="240" min="10" value="20">
+        <h2>距离下次喝水还有：</h2>
+        <div id="time">
+            <div><span id="hour">00</span><span>Hours</span></div>
+            <div><span id="minute">00</span><span>Minutes</span></div>
+            <div><span id="second">00</span><span>Seconds</span></div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const path = require('path');
+    window.$ = require('./assets/js/jquery.min.js')
+    const {shell} = require('electron')
+    const Store = require('electron-store');
+    const store = new Store();
+    const {ipcRenderer} = require("electron");
+    function setWin(type){
+        ipcRenderer.send(type);
+    }
+    var Interval = store.get('interval');
+    if (Interval != undefined){
+        $("#clock h2:first span").text(Interval/60);
+        $("#slider").val(Interval/60);
+    }else{
+        $("#clock h2:first span").text("你压根没设置");
+    }
+    function water_alert(title,body){
+        var title = title;
+        var body = body;
+        let option = {
+            title: title,
+            body: body,
+            icon: "./assets/img/water.png",
+            href: 'https://github.com/Gitshaoxiang/drink-water-alert',
+            timeoutType: 'never'
+        };
+        // 创建通知并保存
+        let Notication = new window.Notification(option.title, option);
+
+        // 当通知被点击时, 用默认浏览器打开链接
+        Notication.onclick= function(){
+            shell.openExternal(option.href)
+        }
+        Interval = store.get('interval');
+    }
+
+    setInterval(() => {
+        Interval--;
+        formatSeconds(Interval);
+        if(Interval<=0) {
+            water_alert("够钟饮水啦！扑街","想好去哪家肾科医院碎石了嘛?朋友");
+        }
+    }, 1000);
+
+    function formatSeconds(seconds) {
+        var secondTime = parseInt(seconds);
+        var minuteTime = 0;
+        var hourTime = 0;
+        if(secondTime > 60) {//如果秒数大于60，将秒数转换成整数
+            //获取分钟，除以60取整数，得到整数分钟
+            minuteTime = parseInt(secondTime / 60);
+            //获取秒数，秒数取佘，得到整数秒数
+            secondTime = parseInt(secondTime % 60);
+            //如果分钟大于60，将分钟转换成小时
+            if(minuteTime > 60) {
+                //获取小时，获取分钟除以60，得到整数小时
+                hourTime = parseInt(minuteTime / 60);
+                //获取小时后取佘的分，获取分钟除以60取佘的分
+                minuteTime = parseInt(minuteTime % 60);
+            }
+        }
+        $('#second').text(secondTime);
+        $('#minute').text(minuteTime);
+        $('#hour').text(hourTime);
+    }
+
+    $("#slider").bind('input porpertychange',function(event){
+        var sliderValue = parseInt($("#slider").val());
+        if(sliderValue == 10)  water_alert("10分钟饮一次水？饮死你啊！","你摆明上班去厕所划水");
+        if(sliderValue == 180)  water_alert("4个钟饮一次水？深圳市肾科医院欢迎您","二档医保不报销");
+        $("#clock h2:first span").text(sliderValue);
+        store.set('interval', sliderValue*60);
+        Interval = sliderValue*60;
+    });
+
+</script>
+
+</html>
